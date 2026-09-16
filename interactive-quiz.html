@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Quiz - Comparative Equality</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 15px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .quiz-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .quiz-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 80px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 12px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+
+        .section-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .section-badge.part2 {
+            background: var(--warning);
+        }
+
+        .section-badge.part3 {
+            background: var(--success);
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        /* Story Box */
+        .story-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #bae6fd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        .story-box p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Word Bank */
+        .word-bank {
+            background: linear-gradient(135deg, #fdf4ff 0%, #fae8ff 100%);
+            border: 2px dashed #c084fc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .word-bank-title {
+            font-weight: 700;
+            color: #9333ea;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .word-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .word-chip {
+            background: white;
+            border: 2px solid #d8b4fe;
+            padding: 10px 16px;
+            border-radius: 25px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .word-chip:hover, .word-chip:active {
+            background: #9333ea;
+            color: white;
+            border-color: #9333ea;
+            transform: scale(1.05);
+        }
+
+        .word-chip.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Questions */
+        .question-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .question-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+
+        .question-text {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .question-hint {
+            font-style: italic;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        /* Input Styles */
+        .answer-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .answer-input.correct {
+            border-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .answer-input.incorrect {
+            border-color: var(--danger);
+            background: #fef2f2;
+        }
+
+        /* Feedback */
+        .feedback {
+            margin-top: 10px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .feedback.show {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feedback.correct {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .feedback.incorrect {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #34d399);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #fbbf24);
+            color: white;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        /* Image Section */
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            border: 3px solid #e2e8f0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Writing Area */
+        .writing-area {
+            width: 100%;
+            min-height: 120px;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.2s;
+        }
+
+        .writing-area:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Results Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+            animation: modalPop 0.3s ease;
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+        }
+
+        .score-circle .score-num {
+            font-size: 3rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .score-circle .score-total {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .result-message {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .result-details {
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        /* Example Box */
+        .example-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .example-box strong {
+            color: #92400e;
+        }
+
+        /* Responsive for tablets */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 800px;
+                padding: 30px;
+            }
+
+            .quiz-header h1 {
+                font-size: 2rem;
+            }
+
+            .story-box {
+                font-size: 1.1rem;
+                padding: 25px;
+            }
+
+            .question-card {
+                padding: 25px;
+            }
+
+            .answer-input {
+                font-size: 1.1rem;
+                padding: 16px 20px;
+            }
+        }
+
+        /* Touch feedback */
+        @media (hover: none) {
+            .word-chip:active {
+                transform: scale(0.95);
+            }
+
+            .btn:active {
+                transform: scale(0.98);
+            }
+        }
+
+        /* Animations */
+        .shake {
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .celebrate {
+            animation: celebrate 0.6s ease;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="quiz-header">
+            <h1>Practice Quiz #1 - Language Arts</h1>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-value" id="score">0</span>
+                    <span class="stat-label">Score</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="timer">00:00</span>
+                    <span class="stat-label">Time</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="answered">0/9</span>
+                    <span class="stat-label">Answered</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <!-- PART 1: Reading -->
+        <div class="card">
+            <span class="section-badge">Part 1</span>
+            <h3>The Great Drone Race</h3>
+            <div class="story-box">
+                <p>Last month, our city hosted the annual drone racing championship. It was an absolutely thrilling experience for everyone! Our team worked carefully on our drone, "Aero," for weeks. We thought Aero was extremely fast, but when we saw the other competitors, we were quite anxious. The defending champion's drone, "Goliath," was enormous and looked very intimidating. <span class="highlight">(1) Goliath was much bulkier and heavier than Aero.</span> However, Goliath was nowhere near as nimble as Aero during the first obstacle ring.</p>
+                
+                <p>Another drone, named "Vortex," zipped perfectly through the tricky hoops. <span class="highlight">(2) Vortex finished the track in far less time than Goliath.</span> Honestly, Vortex was just as swift as a falcon. Our drone, Aero, was fairly good in this round, but its turns were slightly wider. It was not quite as precise as Vortex when navigating the narrow tunnels.</p>
+                
+                <p>During the final lap, the audience was silent; we could hardly blink. Aero and Vortex were neck and neck the whole way. At the finish line, they were nearly tied! <span class="highlight">(3) Aero's top speed was slightly lower than Vortex's top speed.</span> But in the end, Vortex won the gold medal. Interestingly, their design was not as flashy as ours, but it was undeniably effective.</p>
+                
+                <p>We learned a lot from this event. <span class="highlight">(4) Our next drone will definitely be much more aerodynamic than our current one.</span> We are already planning the new frame. It is going to be not nearly as heavy as Goliath, but it will be just as resilient!</p>
+            </div>
+        </div>
+
+        <!-- SECTION A: Sentence Transformation -->
+        <div class="card">
+            <span class="section-badge">Section A - 1 pt each</span>
+            <h3>Sentence Transformation</h3>
+            <p style="margin-bottom: 15px; color: var(--text-light);">Rewrite sentences (1) and (3) using comparative equality structures. Tap a word from the bank to select it!</p>
+
+            <div class="word-bank">
+                <div class="word-bank-title">WORD BANK</div>
+                <div class="word-options">
+                    <span class="word-chip" data-phrase="as ... as">as ... as</span>
+                    <span class="word-chip" data-phrase="just as ... as">just as ... as</span>
+                    <span class="word-chip" data-phrase="not as ... as">not as ... as</span>
+                    <span class="word-chip" data-phrase="not nearly as ... as">not nearly as ... as</span>
+                    <span class="word-chip" data-phrase="not quite as ... as">not quite as ... as</span>
+                    <span class="word-chip" data-phrase="nowhere near as ... as">nowhere near as ... as</span>
+                </div>
+            </div>
+
+            <div class="example-box">
+                <strong>EXAMPLE:</strong><br>
+                Original: The gold medal is much more valuable than the bronze medal.<br>
+                Transformation: The bronze medal is <em>not nearly as valuable as</em> the gold medal.
+            </div>
+
+            <!-- Question 1 -->
+            <div class="question-card" id="q1-card">
+                <p class="question-text">
+                    <span class="question-number">1</span>
+                    Transform sentence (1): <em>"Goliath was much bulkier and heavier than Aero"</em>
+                </p>
+                <input type="text" class="answer-input" id="q1" placeholder="Type your answer here..." data-correct="Aero was not nearly as bulky and heavy as Goliath">
+                <div class="feedback" id="q1-feedback"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-card" id="q2-card">
+                <p class="question-text">
+                    <span class="question-number">2</span>
+                    Transform sentence (3): <em>"Aero's top speed was slightly lower than Vortex's top speed"</em>
+                </p>
+                <input type="text" class="answer-input" id="q2" placeholder="Type your answer here..." data-correct="Vortex's top speed was slightly higher than Aero's top speed">
+                <div class="feedback" id="q2-feedback"></div>
+            </div>
+        </div>
+
+        <!-- SECTION B: Reading Comprehension -->
+        <div class="card">
+            <span class="section-badge">Section B - 1 pt each</span>
+            <h3>Reading Comprehension</h3>
+            <p style="margin-bottom: 15px; color: var(--text-light);">Answer the following questions based on the text. Read beyond the literal meaning!</p>
+
+            <!-- Question 3 -->
+            <div class="question-card" id="q3-card">
+                <p class="question-text">
+                    <span class="question-number">3</span>
+                    Even though the narrator's team worked on "Aero" for weeks, why did their confidence drop before the championship started?
+                </p>
+                <textarea class="writing-area" id="q3" placeholder="Write your answer here..." rows="3"></textarea>
+                <div class="feedback" id="q3-feedback"></div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="question-card" id="q4-card">
+                <p class="question-text">
+                    <span class="question-number">4</span>
+                    What important lesson about engineering and design can be inferred from Vortex's victory over Aero?
+                </p>
+                <textarea class="writing-area" id="q4" placeholder="Write your answer here..." rows="3"></textarea>
+                <div class="feedback" id="q4-feedback"></div>
+            </div>
+        </div>
+
+        <!-- PART 2: Creative Writing -->
+        <div class="card">
+            <span class="section-badge part2">Part 2</span>
+            <h3>Creative Writing - Comparative Equality</h3>
+            <p style="margin-bottom: 15px; color: var(--text-light);">Look at the image and describe at least THREE situations using comparative equality structures.</p>
+
+            <div class="image-container">
+                <img src="image.jpg" alt="Comparative sizes and speeds: tree, train, turtle, bear, bird, and dog">
+            </div>
+
+            <textarea class="writing-area" id="q5" placeholder="Write at least 3 sentences comparing the animals/objects using structures like: as...as, not as...as, just as...as, not nearly as...as, not quite as...as, nowhere near as...as" rows="6"></textarea>
+            <div class="feedback" id="q5-feedback"></div>
+        </div>
+
+        <!-- PART 3: Tag Questions -->
+        <div class="card">
+            <span class="section-badge part3">Part 3</span>
+            <h3>Future Tag Questions</h3>
+            <p style="margin-bottom: 15px; color: var(--text-light);">Complete the sentences with the correct Tag Question. Pay attention to future forms (will / going to).</p>
+
+            <!-- Question 6 -->
+            <div class="question-card" id="q6-card">
+                <p class="question-text">
+                    <span class="question-number">6</span>
+                    The engineering team will improve their drone's battery next year, <span style="color: var(--primary); font-weight: 600;">______________________?</span>
+                </p>
+                <input type="text" class="answer-input" id="q6" placeholder="Type the tag question..." data-correct="won't they">
+                <div class="feedback" id="q6-feedback"></div>
+            </div>
+
+            <!-- Question 7 -->
+            <div class="question-card" id="q7-card">
+                <p class="question-text">
+                    <span class="question-number">7</span>
+                    Vortex isn't going to participate in the amateur league again, <span style="color: var(--primary); font-weight: 600;">______________________?</span>
+                </p>
+                <input type="text" class="answer-input" id="q7" placeholder="Type the tag question..." data-correct="is it">
+                <div class="feedback" id="q7-feedback"></div>
+            </div>
+
+            <!-- Question 8 -->
+            <div class="question-card" id="q8-card">
+                <p class="question-text">
+                    <span class="question-number">8</span>
+                    We will be absolutely ready for the next state tournament, <span style="color: var(--primary); font-weight: 600;">______________________?</span>
+                </p>
+                <input type="text" class="answer-input" id="q8" placeholder="Type the tag question..." data-correct="won't we">
+                <div class="feedback" id="q8-feedback"></div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="btn-container">
+            <button class="btn btn-primary" onclick="checkAllAnswers()">Check All Answers</button>
+            <button class="btn btn-success" onclick="showResults()">See Results</button>
+            <button class="btn btn-warning" onclick="resetQuiz()">Start Over</button>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div class="modal" id="resultsModal">
+        <div class="modal-content">
+            <div class="score-circle">
+                <span class="score-num" id="finalScore">0</span>
+                <span class="score-total">out of 8</span>
+            </div>
+            <div class="result-message" id="resultMessage">Great Job!</div>
+            <div class="result-details" id="resultDetails"></div>
+            <button class="btn btn-primary" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Timer
+        let seconds = 0;
+        let timerInterval;
+        const totalQuestions = 8;
+        let score = 0;
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        startTimer();
+
+        // Word bank selection
+        document.querySelectorAll('.word-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                document.querySelectorAll('.word-chip').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        // Input validation on blur
+        document.querySelectorAll('.answer-input').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim()) {
+                    this.classList.add('correct');
+                }
+            });
+
+            input.addEventListener('input', function() {
+                this.classList.remove('correct', 'incorrect');
+                const feedback = document.getElementById(this.id + '-feedback');
+                if (feedback) {
+                    feedback.classList.remove('show', 'correct', 'incorrect');
+                }
+            });
+        });
+
+        // Auto-resize textareas
+        document.querySelectorAll('.writing-area').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.max(120, this.scrollHeight) + 'px';
+            });
+        });
+
+        // Check answers
+        function checkAllAnswers() {
+            score = 0;
+            let answeredCount = 0;
+
+            // Check input answers
+            for (let i = 1; i <= 8; i++) {
+                const input = document.getElementById('q' + i);
+                const feedback = document.getElementById('q' + i + '-feedback');
+                
+                if (!input) continue;
+
+                const userAnswer = input.value.trim().toLowerCase();
+                const correctAnswer = input.dataset.correct.toLowerCase();
+
+                if (userAnswer) {
+                    answeredCount++;
+                    
+                    // Simple similarity check
+                    const isCorrect = checkSimilarity(userAnswer, correctAnswer);
+                    
+                    if (isCorrect) {
+                        score++;
+                        input.classList.add('correct');
+                        input.classList.remove('incorrect');
+                        feedback.textContent = '✓ Correct!';
+                        feedback.className = 'feedback show correct';
+                        input.parentElement.classList.add('celebrate');
+                        setTimeout(() => input.parentElement.classList.remove('celebrate'), 600);
+                    } else {
+                        input.classList.add('incorrect');
+                        input.classList.remove('correct');
+                        feedback.innerHTML = '✗ Incorrect. <strong>Expected:</strong> ' + input.dataset.correct;
+                        feedback.className = 'feedback show incorrect';
+                        input.parentElement.classList.add('shake');
+                        setTimeout(() => input.parentElement.classList.remove('shake'), 500);
+                    }
+                } else {
+                    input.classList.remove('correct', 'incorrect');
+                    feedback.className = 'feedback';
+                }
+            }
+
+            // Check creative writing (q5)
+            const q5 = document.getElementById('q5');
+            const q5Feedback = document.getElementById('q5-feedback');
+            if (q5.value.trim()) {
+                answeredCount++;
+                const text = q5.value.toLowerCase();
+                const hasComparative = /as\s+\w+\s+as|not\s+as|not\s+nearly|not\s+quite|nowhere\s+near|just\s+as/.test(text);
+                const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 5);
+                
+                if (hasComparative && sentences.length >= 2) {
+                    score++;
+                    q5Feedback.textContent = '✓ Good use of comparative structures!';
+                    q5Feedback.className = 'feedback show correct';
+                } else {
+                    q5Feedback.innerHTML = '✗ Try to use more comparative equality structures (as...as, not as...as, etc.)';
+                    q5Feedback.className = 'feedback show incorrect';
+                }
+            }
+
+            // Update stats
+            document.getElementById('score').textContent = score;
+            document.getElementById('answered').textContent = answeredCount + '/' + totalQuestions;
+            document.getElementById('progressBar').style.width = (answeredCount / totalQuestions * 100) + '%';
+        }
+
+        function checkSimilarity(user, correct) {
+            // Remove common variations
+            user = user.replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
+            correct = correct.replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
+            
+            // Exact match
+            if (user === correct) return true;
+            
+            // Check if key words are present
+            const keyWords = correct.split(' ').filter(w => w.length > 3);
+            const userWords = user.split(' ');
+            let matches = 0;
+            
+            keyWords.forEach(word => {
+                if (userWords.some(uw => uw.includes(word) || word.includes(uw))) {
+                    matches++;
+                }
+            });
+            
+            return matches >= Math.ceil(keyWords.length * 0.7);
+        }
+
+        // Show results
+        function showResults() {
+            checkAllAnswers();
+            
+            const percentage = Math.round((score / totalQuestions) * 100);
+            let message, emoji;
+
+            if (percentage >= 90) {
+                message = 'Excellent work!';
+                emoji = '🌟';
+            } else if (percentage >= 70) {
+                message = 'Good job!';
+                emoji = '👍';
+            } else if (percentage >= 50) {
+                message = 'Keep practicing!';
+                emoji = '💪';
+            } else {
+                message = 'Review the material';
+                emoji = '📚';
+            }
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('resultMessage').textContent = `${emoji} ${message}`;
+            document.getElementById('resultDetails').textContent = `You scored ${score}/${totalQuestions} (${percentage}%) in ${document.getElementById('timer').textContent}`;
+            document.getElementById('resultsModal').classList.add('show');
+
+            if (percentage >= 70) {
+                createConfetti();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('resultsModal').classList.remove('show');
+        }
+
+        // Reset quiz
+        function resetQuiz() {
+            if (confirm('Are you sure you want to start over? All answers will be cleared.')) {
+                document.querySelectorAll('.answer-input, .writing-area').forEach(el => {
+                    el.value = '';
+                    el.classList.remove('correct', 'incorrect');
+                });
+                document.querySelectorAll('.feedback').forEach(el => {
+                    el.className = 'feedback';
+                });
+                document.querySelectorAll('.question-card').forEach(el => {
+                    el.classList.remove('shake', 'celebrate');
+                });
+                document.querySelectorAll('.word-chip').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                
+                score = 0;
+                seconds = 0;
+                document.getElementById('score').textContent = '0';
+                document.getElementById('answered').textContent = '0/' + totalQuestions;
+                document.getElementById('progressBar').style.width = '0%';
+                document.getElementById('timer').textContent = '00:00';
+                
+                clearInterval(timerInterval);
+                startTimer();
+            }
+        }
+
+        // Confetti effect
+        function createConfetti() {
+            const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.top = '-10px';
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = Math.random() * 10 + 5 + 'px';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    document.body.appendChild(confetti);
+
+                    const animation = confetti.animate([
+                        { top: '-10px', opacity: 1 },
+                        { top: '100vh', opacity: 0 }
+                    ], {
+                        duration: Math.random() * 2000 + 2000,
+                        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                    });
+
+                    animation.onfinish = () => confetti.remove();
+                }, i * 30);
+            }
+        }
+    </script>
+</body>
+</html>
