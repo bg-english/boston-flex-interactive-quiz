@@ -880,25 +880,25 @@
         }
 
         function checkSimilarity(user, correct) {
-            // Remove common variations
-            user = user.replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
-            correct = correct.replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
+            // Normalize: lowercase, remove extra spaces, normalize quotes
+            user = user.toLowerCase().replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
+            correct = correct.toLowerCase().replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
             
-            // Exact match
+            // Exact match (case insensitive)
             if (user === correct) return true;
             
-            // Check if key words are present
+            // Check if answer contains key words (simple contains check)
             const keyWords = correct.split(' ').filter(w => w.length > 3);
-            const userWords = user.split(' ');
             let matches = 0;
             
             keyWords.forEach(word => {
-                if (userWords.some(uw => uw.includes(word) || word.includes(uw))) {
+                if (user.includes(word)) {
                     matches++;
                 }
             });
             
-            return matches >= Math.ceil(keyWords.length * 0.7);
+            // Accept if 60% of key words are present
+            return matches >= Math.ceil(keyWords.length * 0.6);
         }
 
         // Show results
