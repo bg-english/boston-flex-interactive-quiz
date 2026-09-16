@@ -712,7 +712,7 @@
         <div class="modal-content">
             <div class="score-circle">
                 <span class="score-num" id="finalScore">0</span>
-                <span class="score-total">out of 8</span>
+                <span class="score-total">out of 6</span>
             </div>
             <div class="result-message" id="resultMessage">Great Job!</div>
             <div class="result-details" id="resultDetails"></div>
@@ -776,20 +776,20 @@
             score = 0;
             let answeredCount = 0;
 
-            // Check input answers
-            for (let i = 1; i <= 8; i++) {
-                const input = document.getElementById('q' + i);
-                const feedback = document.getElementById('q' + i + '-feedback');
+            // Questions with exact answers (inputs with data-correct)
+            const autoCheckQuestions = ['q1', 'q2', 'q6', 'q7', 'q8'];
+            
+            autoCheckQuestions.forEach(qId => {
+                const input = document.getElementById(qId);
+                const feedback = document.getElementById(qId + '-feedback');
                 
-                if (!input) continue;
+                if (!input || !input.dataset.correct) return;
 
                 const userAnswer = input.value.trim().toLowerCase();
                 const correctAnswer = input.dataset.correct.toLowerCase();
 
                 if (userAnswer) {
                     answeredCount++;
-                    
-                    // Simple similarity check
                     const isCorrect = checkSimilarity(userAnswer, correctAnswer);
                     
                     if (isCorrect) {
@@ -810,14 +810,30 @@
                     }
                 } else {
                     input.classList.remove('correct', 'incorrect');
-                    feedback.className = 'feedback';
+                    input.classList.add('incorrect');
+                    feedback.textContent = '⚠ Not answered';
+                    feedback.className = 'feedback show incorrect';
                 }
-            }
+            });
 
-            // Check creative writing (q5)
+            // Reading comprehension (q3, q4) - check if answered
+            ['q3', 'q4'].forEach(qId => {
+                const textarea = document.getElementById(qId);
+                const feedback = document.getElementById(qId + '-feedback');
+                if (textarea && textarea.value.trim()) {
+                    answeredCount++;
+                    feedback.textContent = '✓ Answer recorded';
+                    feedback.className = 'feedback show correct';
+                } else if (textarea) {
+                    feedback.textContent = '⚠ Not answered';
+                    feedback.className = 'feedback show incorrect';
+                }
+            });
+
+            // Creative writing (q5)
             const q5 = document.getElementById('q5');
             const q5Feedback = document.getElementById('q5-feedback');
-            if (q5.value.trim()) {
+            if (q5 && q5.value.trim()) {
                 answeredCount++;
                 const text = q5.value.toLowerCase();
                 const hasComparative = /as\s+\w+\s+as|not\s+as|not\s+nearly|not\s+quite|nowhere\s+near|just\s+as/.test(text);
@@ -831,6 +847,9 @@
                     q5Feedback.innerHTML = '✗ Try to use more comparative equality structures (as...as, not as...as, etc.)';
                     q5Feedback.className = 'feedback show incorrect';
                 }
+            } else if (q5) {
+                q5Feedback.textContent = '⚠ Not answered';
+                q5Feedback.className = 'feedback show incorrect';
             }
 
             // Update stats
@@ -865,7 +884,8 @@
         function showResults() {
             checkAllAnswers();
             
-            const percentage = Math.round((score / totalQuestions) * 100);
+            const maxScore = 6; // 5 auto-check + 1 creative writing
+            const percentage = Math.round((score / maxScore) * 100);
             let message, emoji;
 
             if (percentage >= 90) {
@@ -884,7 +904,7 @@
 
             document.getElementById('finalScore').textContent = score;
             document.getElementById('resultMessage').textContent = `${emoji} ${message}`;
-            document.getElementById('resultDetails').textContent = `You scored ${score}/${totalQuestions} (${percentage}%) in ${document.getElementById('timer').textContent}`;
+            document.getElementById('resultDetails').textContent = `You scored ${score}/${maxScore} (${percentage}%) in ${document.getElementById('timer').textContent}`;
             document.getElementById('resultsModal').classList.add('show');
 
             if (percentage >= 70) {
