@@ -546,7 +546,7 @@
                     <span class="stat-label">Score</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value" id="timer">00:00</span>
+                    <span class="stat-value" id="timer">00:00:00</span>
                     <span class="stat-label">Time</span>
                 </div>
                 <div class="stat-item">
@@ -721,22 +721,43 @@
     </div>
 
     <script>
-        // Timer
+        // Timer - 2 hours (7200 seconds)
         let seconds = 0;
         let timerInterval;
         const totalQuestions = 8;
+        const examDuration = 7200; // 2 hours in seconds
         let score = 0;
 
         function startTimer() {
             timerInterval = setInterval(() => {
                 seconds++;
-                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const hrs = Math.floor(seconds / 3600).toString().padStart(2, '0');
+                const mins = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
                 const secs = (seconds % 60).toString().padStart(2, '0');
-                document.getElementById('timer').textContent = `${mins}:${secs}`;
+                document.getElementById('timer').textContent = `${hrs}:${mins}:${secs}`;
+                
+                // Alert when time is running out (5 minutes left)
+                if (seconds === examDuration - 300) {
+                    alert('⚠️ You have 5 minutes left!');
+                }
+                
+                // Time's up
+                if (seconds >= examDuration) {
+                    clearInterval(timerInterval);
+                    alert("Time's up! Submitting your exam...");
+                    showResults();
+                }
             }, 1000);
         }
 
         startTimer();
+
+        // Clear any saved progress on page load
+        function clearSavedProgress() {
+            localStorage.removeItem('quizAnswers');
+            localStorage.removeItem('quizTimer');
+        }
+        clearSavedProgress();
 
         // Word bank selection
         document.querySelectorAll('.word-chip').forEach(chip => {
